@@ -34,19 +34,22 @@ const ReportIssue = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate network delay
-    setTimeout(() => {
-      addIssue(formData);
+    try {
+      await addIssue(formData);
       setIsSubmitting(false);
       setSuccess(true);
       setTimeout(() => {
         navigate('/');
       }, 1500);
-    }, 1000);
+    } catch (error) {
+      console.error("Submission failed", error);
+      alert("Failed to submit report. Please try again.");
+      setIsSubmitting(false);
+    }
   };
 
   if (success) {

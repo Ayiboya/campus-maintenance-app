@@ -1,61 +1,65 @@
-const STORAGE_KEY = 'campus_maintenance_issues';
+import { db, storage } from './firebase';
+import { collection, addDoc, getDocs, doc, updateDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 
-// Initialize with some mock data if empty
-const initializeStorage = () => {
-  const existing = localStorage.getItem(STORAGE_KEY);
-  if (!existing) {
-    const mockData = [
-      {
-        id: '1',
-        title: 'Leaking Faucet in Bathroom',
-        description: 'The cold water faucet is leaking continuously, wasting water.',
-        type: 'Plumbing',
-        location: 'Room 204, North Hall',
-        photo: null,
-        status: 'Pending',
-        createdAt: new Date(Date.now() - 86400000).toISOString() // 1 day ago
-      },
-      {
-        id: '2',
-        title: 'Flickering Lights',
-        description: 'Overhead light in the main corridor is flickering and buzzing.',
-        type: 'Electrical',
-        location: 'Corridor, South Hall 1st Floor',
-        photo: null,
-        status: 'In Progress',
-        createdAt: new Date(Date.now() - 172800000).toISOString() // 2 days ago
-      }
-    ];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockData));
+const ISSUES_COLLECTION = 'issues';
+
+export const getIssues = async () => {
+  try {
+    const issuesRef = collection(db, ISSUES_COLLECTION);
+    const q = query(issuesRef, orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate().toISOString() || new Date().toISOString()
+    }));
+  } catch (error) {
+    console.error("Error fetching issues:", error);
+    return [];
   }
 };
 
-export const getIssues = () => {
-  initializeStorage();
-  const data = localStorage.getItem(STORAGE_KEY);
-  return data ? JSON.parse(data) : [];
-};
+export const addIssue = async (issueData) => {
+  try {
+    let photoUrl = null;
 
-export const addIssue = (issueData) => {
-  const issues = getIssues();
-  const newIssue = {
-    ...issueData,
-    id: Date.now().toString(),
-    status: 'Pending',
-    createdAt: new Date().toISOString()
-  };
-  issues.unshift(newIssue);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(issues));
-  return newIssue;
-};
+    // Upload photo to Firebase Storage if it exists
+    if (issueData.photo) {
+      const storageRef = ref(storage, `issues/${Date.now()}_photo`);
+      // issueData.photo is a base64 data URL from FileReader
+      await uploadString(storageRef, issueData.photo, 'data_url');
+      photoUrl = await getDownloadURL(storageRef);
+    }
 
-export const updateIssueStatus = (id, newStatus) => {
-  const issues = getIssues();
-  const index = issues.findIndex(issue => issue.id === id);
-  if (index !== -1) {
-    issues[index].status = newStatus;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(issues));
-    return issues[index];
+    const newIssue = {
+      title: issueData.title,
+      description: issueData.description,
+      type: issueData.type,
+      location: issueData.location,
+      status: 'Pending',
+      photo: photoUrl,
+      createdAt: serverTimestamp()
+    };
+
+    const docRef = await addDoc(collection(db, ISSUES_COLLECTION), newIssue);
+    return { ...newIssue, id: docRef.id, createdAt: new Date().toISOString() };
+  } catch (error) {
+    console.error("Error adding issue:", error);
+    throw error;
   }
-  return null;
+};
+
+export const updateIssueStatus = async (id, newStatus) => {
+  try {
+    const issueRef = doc(db, ISSUES_COLLECTION, id);
+    await updateDoc(issueRef, {
+      status: newStatus
+    });
+    return true;
+  } catch (error) {
+    console.error("Error updating issue status:", error);
+    return false;
+  }
 };

@@ -5,15 +5,24 @@ import './MaintenanceDashboard.css';
 const MaintenanceDashboard = () => {
   const [issues, setIssues] = useState([]);
   const [filter, setFilter] = useState('All');
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchIssues = async () => {
+    setIsLoading(true);
+    const data = await getIssues();
+    setIssues(data);
+    setIsLoading(false);
+  };
 
   useEffect(() => {
-    setIssues(getIssues());
+    fetchIssues();
   }, []);
 
-  const handleStatusChange = (id, newStatus) => {
-    updateIssueStatus(id, newStatus);
-    // Refresh issues list
-    setIssues(getIssues());
+  const handleStatusChange = async (id, newStatus) => {
+    // Optimistic update for snappy UI
+    setIssues(issues.map(issue => issue.id === id ? { ...issue, status: newStatus } : issue));
+    await updateIssueStatus(id, newStatus);
+    fetchIssues();
   };
 
   const filteredIssues = filter === 'All' 
@@ -52,7 +61,11 @@ const MaintenanceDashboard = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredIssues.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan="6" className="empty-cell">Loading issues from database...</td>
+              </tr>
+            ) : filteredIssues.length === 0 ? (
               <tr>
                 <td colSpan="6" className="empty-cell">No issues found.</td>
               </tr>

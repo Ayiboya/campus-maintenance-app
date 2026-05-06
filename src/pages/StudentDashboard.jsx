@@ -8,8 +8,16 @@ import './StudentDashboard.css';
 const StudentDashboard = () => {
   const [issues, setIssues] = useState([]);
 
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
-    setIssues(getIssues());
+    const fetchIssues = async () => {
+      setIsLoading(true);
+      const data = await getIssues();
+      setIssues(data);
+      setIsLoading(false);
+    };
+    fetchIssues();
   }, []);
 
   return (
@@ -26,7 +34,11 @@ const StudentDashboard = () => {
       </div>
       
       <div className="issues-list">
-        {issues.length === 0 ? (
+        {isLoading ? (
+          <div className="empty-state glass-panel">
+            <p>Loading issues...</p>
+          </div>
+        ) : issues.length === 0 ? (
           <div className="empty-state glass-panel">
             <p>You haven't reported any issues yet.</p>
           </div>
