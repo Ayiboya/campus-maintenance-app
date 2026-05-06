@@ -1,6 +1,5 @@
-import { db, storage } from './firebase';
+import { db } from './firebase';
 import { collection, addDoc, getDocs, doc, updateDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 
 const ISSUES_COLLECTION = 'issues';
 
@@ -23,23 +22,15 @@ export const getIssues = async () => {
 
 export const addIssue = async (issueData) => {
   try {
-    let photoUrl = null;
-
-    // Upload photo to Firebase Storage if it exists
-    if (issueData.photo) {
-      const storageRef = ref(storage, `issues/${Date.now()}_photo`);
-      // issueData.photo is a base64 data URL from FileReader
-      await uploadString(storageRef, issueData.photo, 'data_url');
-      photoUrl = await getDownloadURL(storageRef);
-    }
-
+    // Plan B: Save the base64 image data directly into Firestore
+    // This bypasses the need for Firebase Storage entirely
     const newIssue = {
       title: issueData.title,
       description: issueData.description,
       type: issueData.type,
       location: issueData.location,
       status: 'Pending',
-      photo: photoUrl,
+      photo: issueData.photo || null, // Base64 string directly in database
       createdAt: serverTimestamp()
     };
 
