@@ -9,6 +9,8 @@ const ReportIssue = () => {
   const [formData, setFormData] = useState({
     title: '',
     type: 'Plumbing',
+    hostel: '4 Seasons Hostel',
+    customHostel: '',
     location: '',
     description: '',
     photo: null
@@ -68,7 +70,14 @@ const ReportIssue = () => {
     setIsSubmitting(true);
     
     try {
-      await addIssue(formData);
+      const finalHostel = formData.hostel === 'Other' ? formData.customHostel : formData.hostel;
+      const submissionData = {
+        ...formData,
+        hostel: finalHostel
+      };
+      delete submissionData.customHostel;
+
+      await addIssue(submissionData);
       setIsSubmitting(false);
       setSuccess(true);
       setTimeout(() => {
@@ -130,17 +139,63 @@ const ReportIssue = () => {
             </select>
           </div>
           <div className="form-group flex-1">
-            <label className="form-label">Location / Room Number</label>
-            <input 
-              type="text" 
-              name="location" 
+            <label className="form-label">Hostel</label>
+            <select 
+              name="hostel" 
               className="form-control" 
-              placeholder="e.g. North Hall, Room 102" 
-              required 
-              value={formData.location}
+              value={formData.hostel}
               onChange={handleChange}
-            />
+            >
+              <option value="4 Seasons Hostel">4 Seasons Hostel</option>
+              <option value="Liendaville">Liendaville</option>
+              <option value="Urban Platinum">Urban Platinum</option>
+              <option value="Other">Other / Write-in</option>
+            </select>
           </div>
+        </div>
+
+        <div className="form-row">
+          {formData.hostel === 'Other' ? (
+            <>
+              <div className="form-group flex-1">
+                <label className="form-label">Custom Hostel Name</label>
+                <input 
+                  type="text" 
+                  name="customHostel" 
+                  className="form-control" 
+                  placeholder="Type your hostel name" 
+                  required 
+                  value={formData.customHostel}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="form-group flex-1">
+                <label className="form-label">Location / Room Number</label>
+                <input 
+                  type="text" 
+                  name="location" 
+                  className="form-control" 
+                  placeholder="e.g. Room 102" 
+                  required 
+                  value={formData.location}
+                  onChange={handleChange}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="form-group flex-1">
+              <label className="form-label">Location / Room Number</label>
+              <input 
+                type="text" 
+                name="location" 
+                className="form-control" 
+                placeholder="e.g. Room 102, Block A" 
+                required 
+                value={formData.location}
+                onChange={handleChange}
+              />
+            </div>
+          )}
         </div>
 
         <div className="form-group">

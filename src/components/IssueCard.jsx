@@ -31,6 +31,7 @@ const IssueCard = ({ issue }) => {
         </span>
       </div>
       <div className="issue-meta">
+        <span className="issue-hostel">{issue.hostel || 'Unspecified'}</span>
         <span className="issue-type">{issue.type}</span>
         <span className="issue-location">{issue.location}</span>
       </div>

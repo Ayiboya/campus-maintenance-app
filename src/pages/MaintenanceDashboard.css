@@ -8,7 +8,13 @@
 .filter-group {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .filter-group select {

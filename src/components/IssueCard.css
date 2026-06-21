@@ -57,6 +57,13 @@
   border-radius: var(--radius-sm);
 }
 
+.issue-hostel {
+  background: rgba(236, 72, 153, 0.15);
+  color: #f472b6;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
 .issue-description {
   color: var(--text-secondary);
   line-height: 1.5;

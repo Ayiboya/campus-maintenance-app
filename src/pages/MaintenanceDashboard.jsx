@@ -5,6 +5,7 @@ import './MaintenanceDashboard.css';
 const MaintenanceDashboard = () => {
   const [issues, setIssues] = useState([]);
   const [filter, setFilter] = useState('All');
+  const [hostelFilter, setHostelFilter] = useState('All');
   const [isLoading, setIsLoading] = useState(true);
   const [expandedIssueId, setExpandedIssueId] = useState(null);
 
@@ -30,26 +31,47 @@ const MaintenanceDashboard = () => {
     fetchIssues();
   };
 
-  const filteredIssues = filter === 'All' 
-    ? issues 
-    : issues.filter(issue => issue.status === filter);
+  const filteredIssues = issues.filter(issue => {
+    const matchesStatus = filter === 'All' || issue.status === filter;
+    const matchesHostel = hostelFilter === 'All' || issue.hostel === hostelFilter;
+    return matchesStatus && matchesHostel;
+  });
 
   return (
     <div className="admin-dashboard">
       <div className="admin-header">
         <h2>Maintenance Administration</h2>
         <div className="filter-group">
-          <label className="text-secondary">Filter by status:</label>
-          <select 
-            className="form-control" 
-            value={filter} 
-            onChange={(e) => setFilter(e.target.value)}
-          >
-            <option value="All">All Issues</option>
-            <option value="Pending">Pending</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Resolved">Resolved</option>
-          </select>
+          <div className="filter-item">
+            <label className="text-secondary">Status:</label>
+            <select 
+              className="form-control" 
+              value={filter} 
+              onChange={(e) => setFilter(e.target.value)}
+            >
+              <option value="All">All Statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved</option>
+            </select>
+          </div>
+          <div className="filter-item">
+            <label className="text-secondary">Hostel:</label>
+            <select 
+              className="form-control" 
+              value={hostelFilter} 
+              onChange={(e) => setHostelFilter(e.target.value)}
+            >
+              <option value="All">All Hostels</option>
+              <option value="4 Seasons Hostel">4 Seasons Hostel</option>
+              <option value="Liendaville">Liendaville</option>
+              <option value="Urban Platinum">Urban Platinum</option>
+              {Array.from(new Set(issues.map(i => i.hostel)))
+                .filter(h => h && h !== '4 Seasons Hostel' && h !== 'Liendaville' && h !== 'Urban Platinum' && h !== 'Unspecified')
+                .map(h => <option key={h} value={h}>{h}</option>)
+              }
+            </select>
+          </div>
         </div>
       </div>
 
@@ -59,7 +81,7 @@ const MaintenanceDashboard = () => {
             <tr>
               <th>ID</th>
               <th>Date</th>
-              <th>Location</th>
+              <th>Hostel & Location</th>
               <th>Issue Type & Title</th>
               <th>Status</th>
               <th>Action</th>
@@ -83,7 +105,10 @@ const MaintenanceDashboard = () => {
                   >
                     <td>#{issue.id.slice(-4)}</td>
                     <td>{new Date(issue.createdAt).toLocaleDateString()}</td>
-                    <td>{issue.location}</td>
+                    <td>
+                      <div className="cell-title">{issue.hostel || 'Unspecified'}</div>
+                      <div className="cell-subtitle">{issue.location}</div>
+                    </td>
                     <td>
                       <div className="cell-title">{issue.title}</div>
                       <div className="cell-subtitle">{issue.type}</div>

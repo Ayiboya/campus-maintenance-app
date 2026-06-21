@@ -29,6 +29,7 @@ export const addIssue = async (issueData) => {
       description: issueData.description,
       type: issueData.type,
       location: issueData.location,
+      hostel: issueData.hostel || 'Unspecified',
       status: 'Pending',
       photo: issueData.photo || null, // Base64 string directly in database
       createdAt: serverTimestamp()
